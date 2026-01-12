@@ -2,15 +2,18 @@ name: MSC Daily Monitor
 
 on:
   schedule:
-    # 每天台灣時間早上 08:00 (UTC 00:00)
+    # 台灣時間 08:00 (UTC 00:00)
     - cron: '0 0 * * *'
-  workflow_dispatch: # 允許手動執行
+  workflow_dispatch:
+
+# ⚠️ 重要：給予寫入權限，才能更新 history.json
+permissions:
+  contents: write
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
     
-    # 這裡將 GitHub Secret 注入為環境變數，Python 才讀得到
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
@@ -32,3 +35,15 @@ jobs:
 
       - name: Run Scraper
         run: python msc.py
+
+      # 新增步驟：將 history.json 推送回 GitHub
+      - name: Commit and Push History
+        run: |
+          git config --global user.name "MSC-Bot"
+          git config --global user.email "bot@github.com"
+          
+          # 檢查是否有 history.json 變更
+          git add history.json
+          
+          # 如果沒有變更 (例如全是舊行程)，就跳過 commit，避免報錯
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update deals history [skip ci]" && git push)
