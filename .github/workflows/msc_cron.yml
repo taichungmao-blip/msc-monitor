@@ -1,0 +1,27 @@
+name: MSC Price Monitor
+
+on:
+  schedule:
+    # 每天 UTC 00:00 執行 (即台灣時間 08:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # 允許手動從 GitHub 介面觸發執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install requests undetected-chromedriver selenium beautifulsoup4
+
+      - name: Run script
+        run: python msc.py
